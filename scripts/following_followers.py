@@ -60,10 +60,15 @@ if response.status_code == 200:
     # delete all space in the string
     json_string_response_without_spaces = json_string.replace(" ", "")
 
-    # set filename for export into json file
-    filename = f"{current_time}_{username}_response.json"
+    # set folder name
+    folder_name = 'export'
 
-    export_path = f"../export/{filename}"
+    # set filename for export into json file
+    file_name = f"{username}_response.json"
+    export_path = os.path.join(folder_name, file_name)
+
+    # Create the "exports" folder if it doesn't exist
+    os.makedirs(folder_name, exist_ok=True)
 
     # after converted to string, convert back to dict type
     json_converted_dict = json.loads(json_string_response_without_spaces)
@@ -83,9 +88,17 @@ if response.status_code == 200:
     }
 
     export_data = json.dumps(data_for_export, cls=DateTimeEncoder)
+    converted_export_data = json.loads(export_data)
 
-    with open(export_path, 'w') as file:
-        file.write(export_data)
+    if os.path.isfile(export_path) and os.path.getsize(export_path) > 0:
+        with open(export_path, 'r+') as file:
+            file_data = json.load(file)
+            file_data.append(converted_export_data)
+            file.seek(0)
+            json.dump(file_data, file, indent=4)
+    else:
+        with open(export_path, 'w') as file:
+            json.dump([converted_export_data], file, indent=4)
 
     print(f'JSON response saved to {export_path}.')
 
